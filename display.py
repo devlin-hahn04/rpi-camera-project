@@ -59,6 +59,11 @@ def display_worker(state, display_buffer):
         while not state.stop_event.is_set():
 
             # Read shared images safely
+
+            #copy shared image data while holding frame lock 
+            #when is_frozen is true, left panel shows frozen_frame, otherwise it shows latest_frame
+            #right panel shows most recent processed_frame
+            
             with state.frame_lock:
                 is_frozen = state.is_frozen
 

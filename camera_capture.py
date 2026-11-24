@@ -2,6 +2,8 @@
 from picamera2 import Picamera2
 import time
 
+#producer thread of live camera frames
+#image captures are stored as last frame in shared state, frame lock protects the update
 
 def capture_worker(state):
     camera = None

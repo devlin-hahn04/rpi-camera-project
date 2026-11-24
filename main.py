@@ -9,11 +9,17 @@ from processor import processor_worker
 
 WINDOW_NAME = "Parallel Camera Filter Viewer"
 
+#entry point to the application
+#create a shared state object and launch independent threads for camera capture, display, menu, and processing
+#each thread handles different tasks so camera capture, user interaction, displauy preparation and proccesing coordination are separated
+
+
 
 def main():
     state = AppState()
     display_buffer = DisplayBuffer()
 
+    # Create and start threads for each component of the application
     capture_thread = threading.Thread(
         target=capture_worker,
         args=(state,),
@@ -49,8 +55,9 @@ def main():
         cv2.namedWindow(WINDOW_NAME, cv2.WINDOW_NORMAL)
         cv2.resizeWindow(WINDOW_NAME, 1100, 450)
 
+        #starting threads
         for thread in threads:
-            thread.start()
+            thread.start() #launches worker threads 
 
         print("[Main] All 4 threads started.")
         print("[Main] Use the terminal menu to choose a filter.")
@@ -90,12 +97,13 @@ def main():
     finally:
         print("[Main] Stopping application...")
 
-        state.stop_event.set()
-        state.pause_event.clear()
+        state.stop_event.set()  #signals app shutdown
+        state.pause_event.clear() #prvents Capture thread from staying paused
 
+        #stopping threads
         for thread in threads:
             if thread.ident is not None:
-                thread.join()
+                thread.join()  #waits for each one to terminate during shutdown 
 
         cv2.destroyAllWindows()
 

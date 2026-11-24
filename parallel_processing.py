@@ -35,6 +35,9 @@ def process_section(section, filter_name, trim_top, output_rows, connection):
         ].copy()
 
         # Send the result and actual PID to the parent
+
+        #separate processes do not share same memory
+        #using multiprocessing Pipe to send filtered image section and process ID back to parent 
         connection.send(("ok", result, os.getpid()))
 
     except Exception as error:
@@ -61,6 +64,8 @@ def parallel_filter(frame, filter_name, num_processes=4):
 
     if not isinstance(num_processes, int) or num_processes < 2:
         raise ValueError("At least two processes are required.")
+
+    #dividing rows among worker processes, each worker gets about 25% of the image 
 
     height = frame.shape[0]
 
@@ -103,6 +108,9 @@ def parallel_filter(frame, filter_name, num_processes=4):
                 duplex=False
             )
 
+            
+            #each process receives one image section and executes 
+            #process_section independently 
             process = context.Process(
                 target=process_section,
                 args=(
@@ -152,6 +160,9 @@ def parallel_filter(frame, filter_name, num_processes=4):
                 )
 
         # Reconstruct full image
+
+        #all filtered sections are received in the original top to bottom order
+        #here we combine them to complete the image 
         processed_frame = np.concatenate(
             results, axis=0
         )
@@ -165,6 +176,9 @@ def parallel_filter(frame, filter_name, num_processes=4):
 
     finally:
         # Release resources even if a worker fails
+
+        #all communication connections are closed
+        #remaining worker is terminated and joined
         for connection in connections:
             connection.close()
 

@@ -2,6 +2,8 @@
 import threading
 import queue
 
+#Lock prevents multiple accesses to shared frame data while one thread is readding or modifying
+#queue safely transfers filter requests from menu thread to processor thread 
 
 class AppState:
     def __init__(self):

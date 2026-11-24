@@ -53,6 +53,7 @@ def processor_worker(state, num_processes=4):
         while not state.stop_event.is_set():
 
             try:
+                #procesor waits for a request from the menu thread
                 filter_name, done_event = (
                     state.filter_queue.get(timeout=0.1)
                 )
@@ -67,6 +68,10 @@ def processor_worker(state, num_processes=4):
                 )
 
                 # 1. Request capture to pause
+
+                #processor requests a camera pause using pause_event
+                #waits for paused_ack_event from Capture thread to ensure capture has stopped updating frames
+                #before cpying image for processing 
                 state.pause_event.set()
 
                 # 2. Wait until capture confirms it is paused
@@ -87,6 +92,9 @@ def processor_worker(state, num_processes=4):
                     continue
 
                 # 3. Freeze the most recent captured frame
+
+                #obtain frame lock to copy latest image and update frozen state 
+                #using original_frame to prevent filter from modifying live image 
                 with state.frame_lock:
                     if state.latest_frame is None:
                         raise RuntimeError(
@@ -113,6 +121,8 @@ def processor_worker(state, num_processes=4):
                         continue
 
                 # 5. Apply filter
+
+                #applying filter and creating separate worker processes 
                 result_frame, actual_processes = apply_filter(
                     original_frame,
                     filter_name,
@@ -145,6 +155,8 @@ def processor_worker(state, num_processes=4):
 
             finally:
                 # Release frozen state on success or failure
+
+                #clears frozen state and releasses camera pause to prevent from staying frozen 
                 with state.frame_lock:
                     state.is_frozen = False
                     state.frozen_frame = None

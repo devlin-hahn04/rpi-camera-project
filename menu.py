@@ -57,6 +57,11 @@ def menu_worker(state):
             # Completion signal for this request
             done_event = threading.Event()
 
+            #menu thread produces filter requests 
+            #processor thread consumes those requests 
+
+            #done_event lets menu wait until processing finishes to prevent overlapping filter requests 
+
             # Send filter request to processor
             state.filter_queue.put(
                 (filter_name, done_event)
