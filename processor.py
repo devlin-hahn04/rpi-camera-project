@@ -60,6 +60,8 @@ def processor_worker(state, num_processes=4):
             except queue.Empty:
                 continue
 
+
+            #START TIME COUNT
             start_time = time.perf_counter()
 
             try:
@@ -139,6 +141,7 @@ def processor_worker(state, num_processes=4):
                 with state.frame_lock:
                     state.processed_frame = result_frame.copy()
 
+                # END TIME COUNT
                 elapsed_ms = (
                     time.perf_counter() - start_time
                 ) * 1000.0
